@@ -123,8 +123,8 @@ const Admin = () => {
         <div className="admin-dashboard">
             <header className="admin-header">
                 <div className="logo">
-                    <span className="logo-icon">📺</span>
-                    <h1>MultiScreen Control</h1>
+                    <span className="logo-icon">💠</span>
+                    <h1>Mosaic Control</h1>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

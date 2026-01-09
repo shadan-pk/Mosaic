@@ -229,15 +229,20 @@ const VideoControl = () => {
                             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                 <button
                                     className="btn-toggle-preview"
-                                    style={{
-                                        padding: '2px 8px',
-                                        fontSize: '0.7rem',
-                                        backgroundColor: previewMonitor ? '#4CAF50' : '#444'
-                                    }}
                                     onClick={() => setPreviewMonitor(!previewMonitor)}
                                     title="Monitor Audio Locally"
+                                    style={{
+                                        backgroundColor: previewMonitor ? 'rgba(34, 197, 94, 0.1)' : 'transparent',
+                                        color: previewMonitor ? 'var(--success)' : 'var(--text-secondary)',
+                                        borderColor: previewMonitor ? 'var(--success)' : 'var(--border-glass)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        transition: 'all 0.2s ease'
+                                    }}
                                 >
-                                    {previewMonitor ? '🔊 Monitoring' : '🔇 Monitor'}
+                                    <span>{previewMonitor ? '🔊' : '🔇'}</span>
+                                    <span>{previewMonitor ? 'Monitoring' : 'Monitor'}</span>
                                 </button>
                                 <button
                                     className="btn-toggle-preview"

@@ -10,9 +10,9 @@ function Home() {
     <div className="home-page">
       <div className="home-container">
         <div className="home-header">
-          <span className="home-logo">📺</span>
-          <h1>MultiScreen Video Wall</h1>
-          <p>Transform multiple screens into one unified display</p>
+          <span className="home-logo">💠</span>
+          <h1>Mosaic</h1>
+          <p>Unified Video Wall System</p>
         </div>
 
         <div className="home-options">
