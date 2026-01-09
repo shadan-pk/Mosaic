@@ -3,7 +3,7 @@ import { useSocket } from '../context/SocketContext';
 
 const VideoPlayer = ({ viewport, videoUrl, isPlaying, currentTime, volume, displayMode }) => {
     const videoRef = useRef(null);
-    const { reportTime } = useSocket();
+    const { reportTime, reportDuration, config } = useSocket();
     const [isBuffering, setIsBuffering] = useState(false);
     const [hasError, setHasError] = useState(false);
     const lastSyncTime = useRef(0);
@@ -74,6 +74,16 @@ const VideoPlayer = ({ viewport, videoUrl, isPlaying, currentTime, volume, displ
     }, [volume]);
 
     // Handle video events
+    const handleLoadedMetadata = () => {
+        const video = videoRef.current;
+        if (video) {
+            // Report duration if it's valid and different from current config
+            if (video.duration && Math.abs(video.duration - config.duration) > 1) {
+                reportDuration(video.duration);
+            }
+        }
+    };
+
     const handleTimeUpdate = () => {
         const video = videoRef.current;
         if (video && isPlaying) {
@@ -106,6 +116,7 @@ const VideoPlayer = ({ viewport, videoUrl, isPlaying, currentTime, volume, displ
                 ref={videoRef}
                 src={videoUrl}
                 style={videoStyle}
+                onLoadedMetadata={handleLoadedMetadata}
                 onTimeUpdate={handleTimeUpdate}
                 onWaiting={handleWaiting}
                 onPlaying={handlePlaying}

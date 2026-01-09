@@ -186,12 +186,12 @@ const VideoControl = () => {
                             <input
                                 type="range"
                                 min="0"
-                                max="600"
+                                max={config.duration || 100}
                                 step="0.1"
                                 value={config.currentTime || 0}
                                 onChange={handleSeek}
                             />
-                            <span className="time-duration">10:00</span>
+                            <span className="time-duration">{formatTime(config.duration || 0)}</span>
                         </div>
 
                         <div className="playback-status">

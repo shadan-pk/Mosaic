@@ -9,6 +9,7 @@ class ScreenManager {
       isPlaying: false,
       currentTime: 0,
       volume: 1,
+      duration: 0,
       displayMode: 'matrix' // 'matrix' = one video across all screens, 'duplicate' = same video on each screen
     };
   }

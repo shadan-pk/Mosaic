@@ -162,6 +162,16 @@ io.on('connection', (socket) => {
     screenManager.updateConfig({ currentTime: time });
   });
 
+  // Handle duration update from client
+  socket.on('video:duration', (duration) => {
+    // Only update if duration is significantly different (e.g. > 1s)
+    if (Math.abs(screenManager.getConfig().duration - duration) > 1) {
+        console.log(`Video duration updated: ${duration}`);
+        const config = screenManager.updateConfig({ duration });
+        io.emit('config:update', config);
+    }
+  });
+
   // Handle config update from admin
   socket.on('config:update', (newConfig) => {
     const config = screenManager.updateConfig(newConfig);

@@ -21,6 +21,7 @@ export const SocketProvider = ({ children }) => {
         isPlaying: false,
         currentTime: 0,
         volume: 1,
+        duration: 0,
         displayMode: 'matrix' // 'matrix' or 'duplicate'
     });
     const [screens, setScreens] = useState([]);
@@ -142,6 +143,12 @@ export const SocketProvider = ({ children }) => {
         }
     }, [socket]);
 
+    const reportDuration = useCallback((duration) => {
+        if (socket) {
+            socket.emit('video:duration', duration);
+        }
+    }, [socket]);
+
     const value = {
         socket,
         isConnected,
@@ -157,7 +164,8 @@ export const SocketProvider = ({ children }) => {
         playVideo,
         pauseVideo,
         seekVideo,
-        reportTime
+        reportTime,
+        reportDuration
     };
 
     return (
