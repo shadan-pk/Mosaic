@@ -15,16 +15,18 @@
   --text-secondary: #a0a0b0;
   --text-muted: #606070;
 
-  --accent-primary: #6366f1;
-  --accent-secondary: #8b5cf6;
-  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --accent-primary: #10b981;
+  /* Emerald 500 */
+  --accent-secondary: #059669;
+  /* Emerald 600 */
+  --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
 
   --success: #22c55e;
   --warning: #f59e0b;
   --error: #ef4444;
 
   --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.3);
+  --shadow-glow: 0 0 40px rgba(16, 185, 129, 0.3);
 
   --radius-sm: 8px;
   --radius-md: 12px;

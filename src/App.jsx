@@ -8,37 +8,28 @@ import './index.css';
 function Home() {
   return (
     <div className="home-page">
-      <div className="home-container">
-        <div className="home-header">
-          <span className="home-logo">💠</span>
-          <h1>Mosaic</h1>
-          <p>Unified Video Wall System</p>
+      <div className="home-container" style={{ maxWidth: '600px', textAlign: 'center' }}>
+        <div className="home-header" style={{ marginBottom: '4rem' }}>
+          <h1 style={{ fontSize: '3.5rem', fontWeight: '800', letterSpacing: '-0.05em', marginBottom: '1rem' }}>Mosaic</h1>
+          <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', fontWeight: '300' }}>Unified Video Wall System</p>
         </div>
 
-        <div className="home-options">
-          <Link to="/admin" className="home-card admin-card">
-            <span className="card-icon">🎛️</span>
-            <h2>Admin Dashboard</h2>
-            <p>Configure matrix, manage screens, and control video playback</p>
-            <span className="card-arrow">→</span>
+        <div className="home-options" style={{ display: 'grid', gap: '1rem', gridTemplateColumns: '1fr' }}>
+          <Link to="/admin" className="home-card admin-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-secondary)' }}>
+            <div style={{ textAlign: 'left' }}>
+              <h2 style={{ fontSize: '1.1rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>Admin Dashboard</h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>System Configuration & Control</p>
+            </div>
+            <span className="card-arrow" style={{ position: 'static', opacity: 1, fontSize: '1.2rem' }}>→</span>
           </Link>
 
-          <Link to="/client" className="home-card client-card">
-            <span className="card-icon">🖥️</span>
-            <h2>Client Screen</h2>
-            <p>Connect this screen to be part of the video wall</p>
-            <span className="card-arrow">→</span>
+          <Link to="/client" className="home-card client-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-secondary)' }}>
+            <div style={{ textAlign: 'left' }}>
+              <h2 style={{ fontSize: '1.1rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>Client Screen</h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>Connect Display Node</p>
+            </div>
+            <span className="card-arrow" style={{ position: 'static', opacity: 1, fontSize: '1.2rem' }}>→</span>
           </Link>
-        </div>
-
-        <div className="home-instructions">
-          <h3>Quick Start</h3>
-          <ol>
-            <li>Open <strong>Admin Dashboard</strong> on your control computer</li>
-            <li>Open <strong>Client Screen</strong> on each lab computer</li>
-            <li>Drag clients into the matrix grid to assign positions</li>
-            <li>Enter a video URL and press play</li>
-          </ol>
         </div>
       </div>
     </div>
