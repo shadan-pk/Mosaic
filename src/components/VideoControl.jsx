@@ -5,6 +5,8 @@ const VideoControl = () => {
     const { config, setVideoUrl, playVideo, pauseVideo, seekVideo, updateConfig } = useSocket();
     const [urlInput, setUrlInput] = useState(config.videoUrl || '');
     const [showPreview, setShowPreview] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(null);
+    const [uploadStatus, setUploadStatus] = useState('');
     const previewRef = useRef(null);
 
     const handleLoadVideo = () => {
@@ -79,32 +81,86 @@ const VideoControl = () => {
                         accept="video/*"
                         onChange={(e) => {
                             if (e.target.files?.[0]) {
+                                const file = e.target.files[0];
                                 const formData = new FormData();
-                                formData.append('video', e.target.files[0]);
+                                formData.append('video', file);
 
-                                // Determine server URL dynamically
+                                setUploadProgress(0);
+                                setUploadStatus('Uploading to server...');
+
+                                const xhr = new XMLHttpRequest();
                                 const protocol = window.location.protocol;
                                 const hostname = window.location.hostname;
-                                const port = 3001; // Backend port
+                                const port = 3001;
                                 const uploadUrl = `${protocol}//${hostname}:${port}/api/upload`;
 
-                                fetch(uploadUrl, {
-                                    method: 'POST',
-                                    body: formData
-                                })
-                                    .then(res => res.json())
-                                    .then(data => {
+                                xhr.open('POST', uploadUrl, true);
+
+                                xhr.upload.onprogress = (event) => {
+                                    if (event.lengthComputable) {
+                                        const percentComplete = (event.loaded / event.total) * 100;
+                                        setUploadProgress(Math.round(percentComplete));
+                                        if (percentComplete === 100) {
+                                            setUploadStatus('Finalizing Cloud Upload... (This may take a moment)');
+                                        }
+                                    }
+                                };
+
+                                xhr.onload = () => {
+                                    if (xhr.status === 200) {
+                                        const data = JSON.parse(xhr.responseText);
                                         if (data.url) {
-                                            // Construct full URL for the video
-                                            const fullVideoUrl = `${protocol}//${hostname}:${port}${data.url}`;
+                                            let fullVideoUrl = data.url;
+                                            if (!data.url.startsWith('http')) {
+                                                fullVideoUrl = `${protocol}//${hostname}:${port}${data.url}`;
+                                            }
                                             setUrlInput(fullVideoUrl);
                                             setVideoUrl(fullVideoUrl);
+
+                                            // Handle source types for better status
+                                            const statusMsg = data.source === 'manifest' ? 'Found existing video! ✅' : 'Upload Complete! ✅';
+                                            setUploadStatus(statusMsg);
+
+                                            setTimeout(() => {
+                                                setUploadProgress(null);
+                                                setUploadStatus('');
+                                            }, 3000);
                                         }
-                                    })
-                                    .catch(err => console.error('Upload failed:', err));
+                                    } else {
+                                        console.error('Upload failed');
+                                        setUploadStatus('Upload Failed ❌');
+                                        setUploadProgress(null);
+                                    }
+                                };
+
+                                xhr.onerror = () => {
+                                    console.error('Upload error');
+                                    setUploadStatus('Network Error ❌');
+                                    setUploadProgress(null);
+                                };
+
+                                xhr.send(formData);
                             }
                         }}
                     />
+                    {uploadProgress !== null && (
+                        <div className="upload-progress-container" style={{ marginTop: '10px' }}>
+                            <div className="progress-bar-bg" style={{ width: '100%', height: '8px', backgroundColor: 'var(--surface-light)', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div
+                                    className="progress-bar-fill"
+                                    style={{
+                                        width: `${uploadProgress}%`,
+                                        height: '100%',
+                                        backgroundColor: 'var(--primary)',
+                                        transition: 'width 0.2s ease'
+                                    }}
+                                ></div>
+                            </div>
+                            <div className="upload-status-text" style={{ marginTop: '5px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                {uploadStatus} {uploadProgress < 100 && `${uploadProgress}%`}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="url-input-group">

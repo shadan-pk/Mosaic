@@ -8,6 +8,8 @@ import fs from 'fs';
 import multer from 'multer';
 import ScreenManager from './screenManager.js';
 
+import { v2 as cloudinary } from 'cloudinary';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -15,6 +17,23 @@ const __dirname = path.dirname(__filename);
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
+}
+
+// Settings file path
+const settingsPath = path.join(__dirname, 'settings.json');
+let settings = {};
+
+// Load settings if exist
+if (fs.existsSync(settingsPath)) {
+  try {
+    settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    if (settings.cloudinary) {
+      cloudinary.config(settings.cloudinary);
+      console.log('Cloudinary configured from settings');
+    }
+  } catch (err) {
+    console.error('Error loading settings:', err);
+  }
 }
 
 // Configure Multer for file uploads
@@ -51,12 +70,132 @@ app.use(express.static(path.join(__dirname, '../dist')));
 app.use('/uploads', express.static(uploadDir));
 
 // API Routes
-app.post('/api/upload', upload.single('video'), (req, res) => {
+app.post('/api/settings/cloud', async (req, res) => {
+  const { cloudName, apiKey, apiSecret } = req.body;
+  
+  if (!cloudName || !apiKey || !apiSecret) {
+    // Check if clearing settings
+    if (req.body.clear) {
+      delete settings.cloudinary;
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+      return res.json({ message: 'Cloudinary settings cleared', type: 'local' });
+    }
+    return res.status(400).json({ error: 'Missing Cloudinary credentials' });
+  }
+
+  const newSettings = {
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret
+  };
+
+  try {
+    // Verify config by setting it temporary
+    cloudinary.config(newSettings);
+    
+    // Test the connection
+    await cloudinary.api.ping();
+    
+    // If ping successful, save to settings
+    settings.cloudinary = newSettings;
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    
+    res.json({ message: 'Cloudinary connected successfully', type: 'cloud' });
+  } catch (error) {
+    console.error('Cloudinary verification failed:', error);
+    res.status(500).json({ error: 'Verification failed: Invalid credentials or network error' });
+  }
+});
+
+app.get('/api/settings/cloud', (req, res) => {
+  res.json({
+    configured: !!settings.cloudinary,
+    cloudName: settings.cloudinary ? settings.cloudinary.cloud_name : null
+  });
+});
+
+// Video Manifest file path
+const videosManifestPath = path.join(__dirname, 'videos.json');
+let videoManifest = [];
+
+// Load manifest if exists
+if (fs.existsSync(videosManifestPath)) {
+  try {
+    videoManifest = JSON.parse(fs.readFileSync(videosManifestPath, 'utf8'));
+  } catch (err) {
+    console.error('Error loading video manifest:', err);
+  }
+}
+
+// ... existing code ...
+
+app.post('/api/upload', upload.single('video'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
+
+  const filename = req.file.originalname;
+  const size = req.file.size;
   
-  // Return the URL relative to the server root
+  console.log(`[Upload] Processing file: ${filename} (${size} bytes)`);
+
+  // Check manifest for existing video
+  // We match by filename AND size to be relatively sure it's the same video
+  const existingVideo = videoManifest.find(v => v.filename === filename && v.size === size);
+
+  if (existingVideo) {
+    console.log(`[Manifest] Found existing video for ${filename}, returning URL: ${existingVideo.url}`);
+    // Remove the temp upload
+    try {
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    } catch(e) { console.error('Error deleting temp file:', e); }
+
+    return res.json({ url: existingVideo.url, source: 'manifest' });
+  }
+
+  // Check if Cloudinary is configured
+  if (settings.cloudinary) {
+    try {
+      console.log(`[Cloudinary] Starting upload for ${filename}...`);
+      
+      // Use original filename (sanitized) for public_id to keep it readable and stable
+      const safeName = path.parse(filename).name.replace(/[^a-zA-Z0-9-_]/g, '_');
+      const publicId = `multiscreen/${safeName}`;
+
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        resource_type: 'video',
+        public_id: publicId,
+        overwrite: true 
+      });
+
+      // Remove local file after successful upload
+      try {
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      } catch(e) { console.error('Error deleting temp file:', e); }
+
+      const videoData = {
+        id: result.public_id,
+        filename: filename,
+        size: size,
+        url: result.secure_url,
+        provider: 'cloudinary',
+        uploadedAt: new Date().toISOString()
+      };
+
+      // Add to manifest and save
+      videoManifest.push(videoData);
+      fs.writeFileSync(videosManifestPath, JSON.stringify(videoManifest, null, 2));
+
+      console.log(`[Cloudinary] Upload success: ${result.secure_url}`);
+      return res.json({ url: result.secure_url });
+    } catch (error) {
+      console.error('[Cloudinary] Upload failed:', error);
+      return res.status(500).json({ error: 'Cloud upload failed: ' + error.message });
+    }
+  }
+  
+  // Local fallback
+  console.log('[Local] Using local storage');
   const fileUrl = `/uploads/${req.file.filename}`;
   res.json({ url: fileUrl });
 });
