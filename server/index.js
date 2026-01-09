@@ -159,7 +159,11 @@ io.on('connection', (socket) => {
 
   // Handle time sync request (for keeping clients in sync)
   socket.on('video:timeUpdate', (time) => {
-    screenManager.updateConfig({ currentTime: time });
+    const config = screenManager.updateConfig({ currentTime: time });
+    // Broadcast occasional time updates so Admin UI stays in sync
+    // We throttle this slightly on the client side (reporting every 2s)
+    // so it's safe to broadcast here.
+    io.emit('config:update', { currentTime: time });
   });
 
   // Handle duration update from client

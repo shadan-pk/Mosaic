@@ -224,7 +224,8 @@ body {
    Admin Dashboard
    =================================== */
 .admin-dashboard {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
@@ -1200,4 +1201,31 @@ body {
   .home-options {
     grid-template-columns: 1fr;
   }
+}
+
+/* ===================================
+   Custom Scrollbar
+   =================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+  border-color: transparent;
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--bg-primary);
 }
