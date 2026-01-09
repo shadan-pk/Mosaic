@@ -94,6 +94,26 @@ const Admin = () => {
             });
     };
 
+    const handleClearVideoCache = async () => {
+        if (window.confirm('Are you sure you want to clear the video cache? This will remove all video history from the server.')) {
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname;
+            const port = 3001;
+
+            try {
+                const response = await fetch(`${protocol}//${hostname}:${port}/api/videos/clear`, { method: 'POST' });
+                if (response.ok) {
+                    alert('Video cache cleared successfully!');
+                } else {
+                    alert('Failed to clear cache');
+                }
+            } catch (error) {
+                console.error('Error clearing cache:', error);
+                alert('Error clearing cache');
+            }
+        }
+    };
+
     const handleConfigUpdate = () => {
         updateConfig({ rows: parseInt(rows), cols: parseInt(cols) });
     };
@@ -206,15 +226,35 @@ const Admin = () => {
                                 />
                             </div>
 
-                            <div className="modal-actions">
-                                {isCloudConfigured && (
-                                    <button className="btn-secondary" style={{ color: 'var(--error)', borderColor: 'var(--error)' }} onClick={handleClearSettings}>
-                                        Disconnect & Clear
+                            <div className="modal-actions" style={{ flexDirection: 'column', gap: '1rem', alignItems: 'stretch' }}>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                                    {isCloudConfigured && (
+                                        <button className="btn-secondary" style={{ color: 'var(--error)', borderColor: 'var(--error)' }} onClick={handleClearSettings}>
+                                            Disconnect & Clear
+                                        </button>
+                                    )}
+                                    <button className="btn-primary" onClick={handleSaveSettings}>
+                                        {isCloudConfigured ? 'Update Configuration' : 'Connect & Save'}
                                     </button>
-                                )}
-                                <button className="btn-primary" onClick={handleSaveSettings}>
-                                    {isCloudConfigured ? 'Update Configuration' : 'Connect & Save'}
-                                </button>
+                                </div>
+                                <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Troubleshooting</span>
+                                    <button
+                                        onClick={handleClearVideoCache}
+                                        style={{
+                                            padding: '0.5rem 1rem',
+                                            background: 'rgba(239, 68, 68, 0.1)',
+                                            border: '1px solid var(--error)',
+                                            color: 'var(--error)',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.85rem',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                    >
+                                        🗑️ Clear Video Cache
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

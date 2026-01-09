@@ -27,7 +27,7 @@ let settings = {};
 if (fs.existsSync(settingsPath)) {
   try {
     settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
-    if (settings.cloudinary) {
+    if (settings.cloudinary && settings.cloudinary.cloud_name) {
       cloudinary.config(settings.cloudinary);
       console.log('Cloudinary configured from settings');
     }
@@ -108,9 +108,10 @@ app.post('/api/settings/cloud', async (req, res) => {
 });
 
 app.get('/api/settings/cloud', (req, res) => {
+  const isConfigured = !!(settings.cloudinary && settings.cloudinary.cloud_name && settings.cloudinary.api_key);
   res.json({
-    configured: !!settings.cloudinary,
-    cloudName: settings.cloudinary ? settings.cloudinary.cloud_name : null
+    configured: isConfigured,
+    cloudName: isConfigured ? settings.cloudinary.cloud_name : null
   });
 });
 
@@ -128,6 +129,22 @@ if (fs.existsSync(videosManifestPath)) {
 }
 
 // ... existing code ...
+
+app.post('/api/videos/clear', (req, res) => {
+  try {
+    // Clear in-memory manifest
+    videoManifest = [];
+    
+    // Write empty array to file
+    fs.writeFileSync(videosManifestPath, JSON.stringify(videoManifest, null, 2));
+    
+    console.log('[Manifest] Video cache cleared');
+    res.json({ message: 'Video cache cleared successfully', count: 0 });
+  } catch (error) {
+    console.error('Error clearing video manifest:', error);
+    res.status(500).json({ error: 'Failed to clear video cache' });
+  }
+});
 
 app.post('/api/upload', upload.single('video'), async (req, res) => {
   if (!req.file) {

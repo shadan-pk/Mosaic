@@ -74,9 +74,13 @@ const VideoControl = () => {
         outline: 'none'
     };
 
+    const [showSettings, setShowSettings] = useState(false); // Removed logic for separate settings
+
     return (
         <div className="video-control">
-            <h2>Video Control</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h2 style={{ margin: 0 }}>Video Control</h2>
+            </div>
 
             {/* Display Mode Toggle */}
             <div className="display-mode-section">
