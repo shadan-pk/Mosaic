@@ -9,6 +9,9 @@ class ScreenManager {
       isPlaying: false,
       currentTime: 0,
       volume: 1,
+      isMuted: false,
+      audioMode: 'broadcast', // 'broadcast' = all screens, 'single' = specific screen
+      audioTarget: null, // screenId if mode is 'single'
       duration: 0,
       displayMode: 'matrix' // 'matrix' = one video across all screens, 'duplicate' = same video on each screen
     };

@@ -149,6 +149,19 @@ export const SocketProvider = ({ children }) => {
         }
     }, [socket]);
 
+    const toggleMute = useCallback(() => {
+        if (socket) {
+            // We use the current state from config to toggle
+            socket.emit('video:control', { isMuted: !config.isMuted });
+        }
+    }, [socket, config.isMuted]);
+
+    const stopVideo = useCallback(() => {
+        if (socket) {
+            socket.emit('video:control', { isPlaying: false, currentTime: 0 });
+        }
+    }, [socket]);
+
     const value = {
         socket,
         isConnected,
@@ -164,8 +177,11 @@ export const SocketProvider = ({ children }) => {
         playVideo,
         pauseVideo,
         seekVideo,
+        seekVideo,
         reportTime,
-        reportDuration
+        reportDuration,
+        toggleMute,
+        stopVideo
     };
 
     return (

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useSocket } from '../context/SocketContext';
 
 const VideoControl = () => {
-    const { config, setVideoUrl, playVideo, pauseVideo, seekVideo, updateConfig } = useSocket();
+    const { config, setVideoUrl, playVideo, pauseVideo, seekVideo, stopVideo, toggleMute, updateConfig } = useSocket();
     const [urlInput, setUrlInput] = useState(config.videoUrl || '');
     const [showPreview, setShowPreview] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(null);
@@ -219,9 +219,20 @@ const VideoControl = () => {
 
                     <div className="playback-controls">
                         <div className="transport-buttons">
+                            {/* Stop Button */}
+                            <button
+                                className="btn-transport"
+                                onClick={stopVideo}
+                                title="Stop"
+                            >
+                                <span className="icon-stop">⏹</span>
+                            </button>
+
+                            {/* Play/Pause Button */}
                             <button
                                 className={`btn-transport ${config.isPlaying ? 'playing' : ''}`}
                                 onClick={() => config.isPlaying ? pauseVideo() : playVideo()}
+                                title={config.isPlaying ? "Pause" : "Play"}
                             >
                                 {config.isPlaying ? (
                                     <span className="icon-pause">⏸</span>
@@ -229,11 +240,27 @@ const VideoControl = () => {
                                     <span className="icon-play">▶</span>
                                 )}
                             </button>
+
+                            {/* Restart Button */}
                             <button
                                 className="btn-transport"
                                 onClick={() => seekVideo(0)}
+                                title="Restart"
                             >
                                 <span className="icon-restart">⏮</span>
+                            </button>
+
+                            {/* Mute Button */}
+                            <button
+                                className={`btn-transport ${config.isMuted ? 'active' : ''}`}
+                                onClick={toggleMute}
+                                title={config.isMuted ? "Unmute" : "Mute"}
+                            >
+                                {config.isMuted ? (
+                                    <span className="icon-mute">🔇</span>
+                                ) : (
+                                    <span className="icon-sound">🔊</span>
+                                )}
                             </button>
                         </div>
 
@@ -254,6 +281,7 @@ const VideoControl = () => {
                             <span className={`status-badge ${config.isPlaying ? 'playing' : 'paused'}`}>
                                 {config.isPlaying ? 'PLAYING' : 'PAUSED'}
                             </span>
+                            {config.isMuted && <span className="status-badge muted" style={{ marginLeft: '0.5rem', backgroundColor: '#e74c3c' }}>MUTED</span>}
                         </div>
                     </div>
                 </>

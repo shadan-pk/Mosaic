@@ -73,6 +73,14 @@ const VideoPlayer = ({ viewport, videoUrl, isPlaying, currentTime, volume, displ
         }
     }, [volume]);
 
+    // Handle Mute State
+    useEffect(() => {
+        const video = videoRef.current;
+        if (video) {
+            video.muted = config.isMuted;
+        }
+    }, [config.isMuted]);
+
     // Handle video events
     const handleLoadedMetadata = () => {
         const video = videoRef.current;
