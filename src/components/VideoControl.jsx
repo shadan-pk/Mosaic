@@ -1,31 +1,44 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSocket } from '../context/SocketContext';
 
 const VideoControl = () => {
-    const { config, setVideoUrl, playVideo, pauseVideo, seekVideo, stopVideo, toggleMute, updateConfig } = useSocket();
+    const { config, screens, setVideoUrl, playVideo, pauseVideo, seekVideo, stopVideo, toggleMute, setVolume, setAudioMode, updateConfig } = useSocket();
     const [urlInput, setUrlInput] = useState(config.videoUrl || '');
+    const [previewMonitor, setPreviewMonitor] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(null);
     const [uploadStatus, setUploadStatus] = useState('');
     const previewRef = useRef(null);
 
+    // Sync preview video playback
+    useEffect(() => {
+        const video = previewRef.current;
+        if (video) {
+            if (config.isPlaying) {
+                video.play().catch(e => console.error("Preview play failed:", e));
+            } else {
+                video.pause();
+            }
+        }
+    }, [config.isPlaying, showPreview]);
+
+    // Sync preview time when seeking
+    useEffect(() => {
+        const video = previewRef.current;
+        if (video && Math.abs(video.currentTime - config.currentTime) > 0.5) {
+            video.currentTime = config.currentTime;
+        }
+    }, [config.currentTime, showPreview]);
+
+    const sampleVideos = [
+        { name: "Big Buck Bunny", url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
+        { name: "Elephant Dream", url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" },
+        { name: "Sintel", url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" }
+    ];
+
     const handleLoadVideo = () => {
-        if (urlInput.trim()) {
-            setVideoUrl(urlInput.trim());
-        }
-    };
-
-    const handleSeek = (e) => {
-        const time = parseFloat(e.target.value);
-        seekVideo(time);
-        if (previewRef.current) {
-            previewRef.current.currentTime = time;
-        }
-    };
-
-    const handlePreviewTimeUpdate = () => {
-        if (previewRef.current && config.isPlaying) {
-            // Keep preview in sync during playback
+        if (urlInput) {
+            setVideoUrl(urlInput);
         }
     };
 
@@ -33,18 +46,33 @@ const VideoControl = () => {
         updateConfig({ displayMode: mode });
     };
 
+    const handleSeek = (e) => {
+        seekVideo(parseFloat(e.target.value));
+    };
+
+    const handlePreviewTimeUpdate = (e) => {
+        // We generally rely on socket updates for time, 
+        // but we could use this for local UI awareness if needed.
+        // For now preventing errors is the goal.
+    };
+
     const formatTime = (seconds) => {
-        if (!seconds || isNaN(seconds)) return '0:00';
+        if (!seconds && seconds !== 0) return "0:00";
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const sampleVideos = [
-        { name: 'Big Buck Bunny', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' },
-        { name: 'Elephant Dream', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4' },
-        { name: 'Sintel', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4' }
-    ];
+    const selectStyle = {
+        backgroundColor: '#2a2a2a',
+        border: '1px solid #444',
+        color: '#fff',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        fontSize: '0.8rem',
+        cursor: 'pointer',
+        outline: 'none'
+    };
 
     return (
         <div className="video-control">
@@ -198,12 +226,26 @@ const VideoControl = () => {
                     <div className="preview-section">
                         <div className="preview-header">
                             <span>Preview</span>
-                            <button
-                                className="btn-toggle-preview"
-                                onClick={() => setShowPreview(!showPreview)}
-                            >
-                                {showPreview ? 'Hide' : 'Show'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                <button
+                                    className="btn-toggle-preview"
+                                    style={{
+                                        padding: '2px 8px',
+                                        fontSize: '0.7rem',
+                                        backgroundColor: previewMonitor ? '#4CAF50' : '#444'
+                                    }}
+                                    onClick={() => setPreviewMonitor(!previewMonitor)}
+                                    title="Monitor Audio Locally"
+                                >
+                                    {previewMonitor ? '🔊 Monitoring' : '🔇 Monitor'}
+                                </button>
+                                <button
+                                    className="btn-toggle-preview"
+                                    onClick={() => setShowPreview(!showPreview)}
+                                >
+                                    {showPreview ? 'Hide' : 'Show'}
+                                </button>
+                            </div>
                         </div>
                         {showPreview && (
                             <div className="preview-container">
@@ -211,7 +253,8 @@ const VideoControl = () => {
                                     ref={previewRef}
                                     src={config.videoUrl}
                                     onTimeUpdate={handlePreviewTimeUpdate}
-                                    muted
+                                    muted={config.isMuted || (!previewMonitor && config.audioMode !== 'admin')}
+                                    playsInline
                                 />
                             </div>
                         )}
@@ -263,6 +306,55 @@ const VideoControl = () => {
                                 )}
                             </button>
                         </div>
+
+                        {/* Audio Controls Row */}
+                        <div className="audio-controls-row" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', padding: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Volume:</span>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.05"
+                                    value={config.volume}
+                                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                                    style={{ flex: 1, height: '4px' }}
+                                />
+                                <span style={{ fontSize: '0.8rem', minWidth: '30px', textAlign: 'right' }}>{Math.round(config.volume * 100)}%</span>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Audio Output:</span>
+                                <select
+                                    value={config.audioMode || 'broadcast'}
+                                    onChange={(e) => setAudioMode(e.target.value, config.audioTarget)}
+                                    style={selectStyle}
+                                >
+                                    <option value="broadcast">All Screens</option>
+                                    <option value="admin">Admin Only (Preview)</option>
+                                    <option value="single">Single Screen...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Show Screen Selector if mode is 'single' */}
+                        {config.audioMode === 'single' && (
+                            <div className="audio-target-selector" style={{ marginTop: '0.5rem', textAlign: 'right' }}>
+                                <span style={{ fontSize: '0.8rem', marginRight: '0.5rem' }}>Select Screen:</span>
+                                <select
+                                    value={config.audioTarget || ''}
+                                    onChange={(e) => setAudioMode('single', e.target.value)}
+                                    style={selectStyle}
+                                >
+                                    <option value="">-- Choose Screen --</option>
+                                    {screens.map(screen => (
+                                        <option key={screen.id} value={screen.id}>
+                                            {screen.id} {screen.position ? `(R${screen.position.row + 1}:C${screen.position.col + 1})` : '(Unassigned)'}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
 
                         <div className="seek-bar">
                             <span className="time-current">{formatTime(config.currentTime)}</span>

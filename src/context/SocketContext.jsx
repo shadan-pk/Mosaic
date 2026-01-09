@@ -22,7 +22,10 @@ export const SocketProvider = ({ children }) => {
         currentTime: 0,
         volume: 1,
         duration: 0,
-        displayMode: 'matrix' // 'matrix' or 'duplicate'
+        displayMode: 'matrix', // 'matrix' or 'duplicate'
+        isMuted: false,
+        audioMode: 'broadcast',
+        audioTarget: null
     });
     const [screens, setScreens] = useState([]);
     const [screenInfo, setScreenInfo] = useState(null);
@@ -162,6 +165,21 @@ export const SocketProvider = ({ children }) => {
         }
     }, [socket]);
 
+    const setVolume = useCallback((volume) => {
+        if (socket) {
+            socket.emit('video:control', { volume });
+        }
+    }, [socket]);
+
+    const setAudioMode = useCallback((mode, targetId = null) => {
+        if (socket) {
+            socket.emit('video:control', {
+                audioMode: mode,
+                audioTarget: targetId
+            });
+        }
+    }, [socket]);
+
     const value = {
         socket,
         isConnected,
@@ -177,11 +195,12 @@ export const SocketProvider = ({ children }) => {
         playVideo,
         pauseVideo,
         seekVideo,
-        seekVideo,
         reportTime,
         reportDuration,
         toggleMute,
-        stopVideo
+        stopVideo,
+        setVolume,
+        setAudioMode
     };
 
     return (

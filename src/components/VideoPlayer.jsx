@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useSocket } from '../context/SocketContext';
 
-const VideoPlayer = ({ viewport, videoUrl, isPlaying, currentTime, volume, displayMode }) => {
+const VideoPlayer = ({ viewport, videoUrl, isPlaying, currentTime, volume, displayMode, isAdminPreview = false }) => {
     const videoRef = useRef(null);
-    const { reportTime, reportDuration, config } = useSocket();
+    const { reportTime, reportDuration, config, screenInfo } = useSocket();
     const [isBuffering, setIsBuffering] = useState(false);
     const [hasError, setHasError] = useState(false);
     const lastSyncTime = useRef(0);
@@ -77,9 +77,34 @@ const VideoPlayer = ({ viewport, videoUrl, isPlaying, currentTime, volume, displ
     useEffect(() => {
         const video = videoRef.current;
         if (video) {
-            video.muted = config.isMuted;
+            let shouldBeMuted = config.isMuted; // Start with global mute state
+
+            // Determine if valid to make sound based on routing
+            if (!shouldBeMuted) {
+                if (isAdminPreview) {
+                    // Admin Preview Logic:
+                    // Only play sound if explicitly set to 'admin' mode
+                    if (config.audioMode !== 'admin') {
+                        shouldBeMuted = true;
+                    }
+                } else {
+                    // Client Screen Logic:
+                    if (config.audioMode === 'admin') {
+                        // Muted if audio is routed to admin only
+                        shouldBeMuted = true;
+                    } else if (config.audioMode === 'single') {
+                        // Muted if this screen is not the target
+                        if (!screenInfo || screenInfo.id !== config.audioTarget) {
+                            shouldBeMuted = true;
+                        }
+                    }
+                    // 'broadcast' mode -> stay unmuted (as long as global config.isMuted is false)
+                }
+            }
+
+            video.muted = shouldBeMuted;
         }
-    }, [config.isMuted]);
+    }, [config.isMuted, config.audioMode, config.audioTarget, screenInfo, isAdminPreview]);
 
     // Handle video events
     const handleLoadedMetadata = () => {
