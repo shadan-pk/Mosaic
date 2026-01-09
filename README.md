@@ -87,7 +87,7 @@ To run the full system, you need to start both the backend server and the fronte
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request :)
 
 ---
 
