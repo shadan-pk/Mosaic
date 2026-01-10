@@ -2,6 +2,9 @@
 
 **Mosaic** is a powerful web-based video wall solution that transforms multiple devices into a single, unified display surface. It allows administrators to orchestrate video playback across a matrix of screens in real-time, perfect for digital signage, events, and immersive installations.
 
+🔖 **Latest Release:** [Mosaic v1.0](https://github.com/shadan-pk/Mosaic/releases/tag/v1.0)
+
+
 ## ✨ Features
 
 *   **Unified Video Wall**: Synchronize video playback across multiple devices (laptops, tablets, screens) to create a massive video wall.
