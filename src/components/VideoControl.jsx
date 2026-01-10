@@ -150,7 +150,14 @@ const VideoControl = () => {
                                             setVideoUrl(fullVideoUrl);
 
                                             // Handle source types for better status
-                                            const statusMsg = data.source === 'manifest' ? 'Found existing video! ✅' : 'Upload Complete! ✅';
+                                            let statusMsg = 'Upload Complete! ✅';
+                                            if (data.source === 'manifest') {
+                                                statusMsg = 'Found existing video! ✅';
+                                            } else if (data.fallback) {
+                                                statusMsg = 'Cloudinary unavailable - Using Local Storage ⚠️';
+                                            } else if (data.provider === 'local') {
+                                                statusMsg = 'Uploaded to Local Storage ✅';
+                                            }
                                             setUploadStatus(statusMsg);
 
                                             setTimeout(() => {
