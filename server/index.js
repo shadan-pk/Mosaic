@@ -206,15 +206,41 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
       console.log(`[Cloudinary] Upload success: ${result.secure_url}`);
       return res.json({ url: result.secure_url });
     } catch (error) {
-      console.error('[Cloudinary] Upload failed:', error);
-      return res.status(500).json({ error: 'Cloud upload failed: ' + error.message });
+      console.error('[Cloudinary] Upload failed, falling back to local storage:', error);
+      // Fall back to local storage if Cloudinary fails
+      const videoData = {
+        filename: filename,
+        size: size,
+        url: `/uploads/${req.file.filename}`,
+        provider: 'local',
+        uploadedAt: new Date().toISOString()
+      };
+
+      // Add to manifest and save
+      videoManifest.push(videoData);
+      fs.writeFileSync(videosManifestPath, JSON.stringify(videoManifest, null, 2));
+
+      console.log('[Local] Cloudinary failed, using local storage:', `/uploads/${req.file.filename}`);
+      return res.json({ url: `/uploads/${req.file.filename}`, fallback: true, provider: 'local' });
     }
   }
   
   // Local fallback
   console.log('[Local] Using local storage');
+  const videoData = {
+    filename: filename,
+    size: size,
+    url: `/uploads/${req.file.filename}`,
+    provider: 'local',
+    uploadedAt: new Date().toISOString()
+  };
+
+  // Add to manifest and save
+  videoManifest.push(videoData);
+  fs.writeFileSync(videosManifestPath, JSON.stringify(videoManifest, null, 2));
+
   const fileUrl = `/uploads/${req.file.filename}`;
-  res.json({ url: fileUrl });
+  res.json({ url: fileUrl, provider: 'local' });
 });
 
 app.get('/api/config', (req, res) => {
